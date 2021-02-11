@@ -16,17 +16,15 @@ Report/
 
 And should be read in the appropriately numbered order.
 
-Requirements
+# Requirements
 Requirements for the Rmd files are given within each script at the start.
 
-Data
+# Data
 Any data that we access from within our reports is found in:
 
 Data/
 
-
-
-Individual Work
+# Individual Work
 Our working is shown in our own directories,
 
 Alex Caian/
