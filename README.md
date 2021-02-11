@@ -17,7 +17,7 @@ Report/
 And should be read in the appropriately numbered order.
 
 # Requirements
-Requirements for the Rmd files are given within each script at the start.
+Requirements for the Python files are given within each script at the start.
 
 # Data
 Any data that we access from within our reports is found in:
