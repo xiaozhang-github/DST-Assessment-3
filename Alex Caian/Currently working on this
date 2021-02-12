@@ -66,19 +66,19 @@ len(df_train)+len(df_test)==len(df)	## Check if the split was properly done
 
 
 # We remove the 'Subject:' bit featuring at the start of every e-mail
-for i in range(0,8):
+for i in range(0,9):
     locals()['df_{}'.format(i)]['E-mails'].replace("Subject:", "", regex=True, inplace=True)
 df_train['E-mails'].replace("Subject", "", regex=True, inplace=True)
 
 # Remove punctuation and often used symbols, but NOT ':' since we'll need later
 # "[?!.,;()\/|]"
-for i in range(0,8):
+for i in range(0,9):
     locals()['df_{}'.format(i)]['E-mails'].replace('[?!.,;()\/|]', "", regex=True, inplace=True)
 df_train['E-mails'].replace('[?!.,;()\/|]', "", regex=True, inplace=True)
 
 # Remove too common words:
 # I, The, the, and, or, not, of, your, for
-for i in range(0,8):
+for i in range(0,9):
     locals()['df_{}'.format(i)]['E-mails'].replace("I ", "", regex=True, inplace=True)
     locals()['df_{}'.format(i)]['E-mails'].replace("The ", "", regex=True, inplace=True)
     locals()['df_{}'.format(i)]['E-mails'].replace(" the ", "", regex=True, inplace=True)
@@ -102,7 +102,7 @@ df_train['E-mails'].replace(" is ", "", regex=True, inplace=True)
 
 # Look at the replied and forwarded:
 ### Not sure why the loop doesn't work, let me know if you fixed it
-# for i in range(0,8):
+# for i in range(0,9):
   #   locals()['df_{}_ok'.format(i)]=locals()['df_{}'.format(i)][['df_{}'.format(i)]['E-mails'].str.contains("re :") | ['df_{}'.format(i)]['E-mails'].str.contains("fw :")]
 df_0_ok = df_0[df_0['E-mails'].str.contains("re :") | df_0['E-mails'].str.contains("fw :")]
 df_1_ok = df_1[df_1['E-mails'].str.contains("re :") | df_1['E-mails'].str.contains("fw :")]
@@ -116,7 +116,7 @@ df_8_ok = df_8[df_8['E-mails'].str.contains("re :") | df_8['E-mails'].str.contai
 df_train_ok = df_train[df_train['E-mails'].str.contains("re :") | df_train['E-mails'].str.contains("fw :")]
 
 # Save the values for plotting
-for i in range(0,8):
+for i in range(0,9):
     locals()['y_{}'.format(i)] = np.array([len(locals()['df_{}_ok'.format(i)]), len(locals()['df_{}'.format(i)]) - len(locals()['df_{}_ok'.format(i)])])
 
 y=np.array([len(df_train_ok), len(df_train)-len(df_train_ok)])
