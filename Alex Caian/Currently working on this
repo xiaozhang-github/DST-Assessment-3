@@ -1,4 +1,10 @@
-## 0. [PRE-REQUISITES] ##
+
+## A list of all libraries and functions used in my work.
+## Kept for record purposes, reported in Section 7 - 'References'
+
+
+
+###################   LIBRARIES   #####################
 
 import glob
 import os
@@ -9,117 +15,63 @@ import pandas as pd
 import math
 from pathlib import Path
 import matplotlib.pyplot as plt
+import nltk
+from nltk.corpus import stopwords
 
-os.chdir("D://Datasets")
+import gensim
+import pickle
 
-corpus = []
+from nltk.stem import WordNetLemmatizer, SnowballStemmer
+from nltk.stem.porter import *
+import pyLDAvis.gensim
 
-for path in Path('All enron unzip').rglob('*.txt'):
-        with open(path, errors='ignore') as f_input:
-            corpus.append(f_input.read())
-
-df = pd.DataFrame(corpus)
-df.head()
-len(df)
-df = df.drop([0,5173,11031,16544,21720]) # Removed the summary bits
-
-df.columns=["E-mails"]
+from gensim.models.coherencemodel import CoherenceModel
+from sklearn.metrics import confusion_matrix, classification_report
 
 
-## 1. [ 10-fold CROSS VALIDATION] ##
 
+###################### FUNCTIONS ######################
 
-df = df.sample(frac=1)	# Shuffle the entire dataframe
-ten_off_df = math.floor(len(df)/10)
-# df_1 = df.sample(ten_off_df)
+        ## This FUN does the text lemmatization:
+def lemmatize_text(text):
+    return [lemmatizer.lemmatize(w) for w in w_tokenizer.tokenize(text)]
+    
+        ## This FUN counts the occurences of a term in a list:
+def countX(lst, x): 
+    return lst.count(x)
+    
+        ## This FUN manually implements the TF (Term Frequency):
+def computeTF(wordDict, bow):
+    tfDict = {}
+    bowCount = len(bow) # bow is a list of all terms in the document
+    for word, count in wordDict.items():
+        tfDict[word] = count/float(bowCount) # bowCount = counts the total number of terms in the document
+    return tfDict
 
-# l1 = list(df_1.index.values)
-# df_new = df.drop(l1)
-
-#################[Failed FOR loop attempt]
-# df_temp = df
-# for i in range(1,9):
- #    locals()['df_{}.index.values'.format(i)] = df_temp.sample(ten_off_df)
- #    c_df = locals()['df_{}'.format(i)]
- #    locals()['l_{}'.format(i)] = list(c_df.index.values)
- #    loc_l = locals()['l_{}'.format(i)]
- #    df_temp = df_temp.drop(loc_l)
-#################
-################# [Good For loop attempt - WORKS]
-df_temp = df
-random.seed(a=5)
-for i in range(0,9):
-    a = df_temp.sample(ten_off_df)
-    locals()['df_{}'.format(i)] = a
-    l = list(a.index.values)
-    df_temp = df_temp.drop(l)
-
-df_test = df_temp
-
-frames=[df_0, df_1, df_2, df_3, df_4, df_5, df_6, df_7, df_8]
-df_train = pd.concat(frames)
-
-len(df_train)+len(df_test)==len(df)	## Check if the split was properly done
-
-
-## Exploratory Data Analysis EDA ##
-
-
-# We remove the 'Subject:' bit featuring at the start of every e-mail
-for i in range(0,9):
-    locals()['df_{}'.format(i)]['E-mails'].replace("Subject:", "", regex=True, inplace=True)
-df_train['E-mails'].replace("Subject", "", regex=True, inplace=True)
-
-# Remove punctuation and often used symbols, but NOT ':' since we'll need later
-# "[?!.,;()\/|]"
-for i in range(0,9):
-    locals()['df_{}'.format(i)]['E-mails'].replace('[?!.,;()\/|]', "", regex=True, inplace=True)
-df_train['E-mails'].replace('[?!.,;()\/|]', "", regex=True, inplace=True)
-
-# Remove too common words:
-# I, The, the, and, or, not, of, your, for
-for i in range(0,9):
-    locals()['df_{}'.format(i)]['E-mails'].replace("I ", "", regex=True, inplace=True)
-    locals()['df_{}'.format(i)]['E-mails'].replace("The ", "", regex=True, inplace=True)
-    locals()['df_{}'.format(i)]['E-mails'].replace(" the ", "", regex=True, inplace=True)
-    locals()['df_{}'.format(i)]['E-mails'].replace(" or ", "", regex=True, inplace=True)
-    locals()['df_{}'.format(i)]['E-mails'].replace(" and ", "", regex=True, inplace=True)
-    locals()['df_{}'.format(i)]['E-mails'].replace(" not ", "", regex=True, inplace=True)
-    locals()['df_{}'.format(i)]['E-mails'].replace(" of ", "", regex=True, inplace=True)
-    locals()['df_{}'.format(i)]['E-mails'].replace("your ", "", regex=True, inplace=True)
-    locals()['df_{}'.format(i)]['E-mails'].replace(" for ", "", regex=True, inplace=True)
-    locals()['df_{}'.format(i)]['E-mails'].replace(" is ", "", regex=True, inplace=True)
-df_train['E-mails'].replace("I ", "", regex=True, inplace=True)
-df_train['E-mails'].replace("The ", "", regex=True, inplace=True)
-df_train['E-mails'].replace(" the ", "", regex=True, inplace=True)
-df_train['E-mails'].replace(" and ", "", regex=True, inplace=True)
-df_train['E-mails'].replace(" or ", "", regex=True, inplace=True)
-df_train['E-mails'].replace(" not ", "", regex=True, inplace=True)
-df_train['E-mails'].replace(" of ", "", regex=True, inplace=True)
-df_train['E-mails'].replace("your ", "", regex=True, inplace=True)
-df_train['E-mails'].replace(" for ", "", regex=True, inplace=True)
-df_train['E-mails'].replace(" is ", "", regex=True, inplace=True)
-
-# Look at the replied and forwarded:
-### Not sure why the loop doesn't work, let me know if you fixed it
-# for i in range(0,9):
-  #   locals()['df_{}_ok'.format(i)]=locals()['df_{}'.format(i)][['df_{}'.format(i)]['E-mails'].str.contains("re :") | ['df_{}'.format(i)]['E-mails'].str.contains("fw :")]
-df_0_ok = df_0[df_0['E-mails'].str.contains("re :") | df_0['E-mails'].str.contains("fw :")]
-df_1_ok = df_1[df_1['E-mails'].str.contains("re :") | df_1['E-mails'].str.contains("fw :")]
-df_2_ok = df_2[df_2['E-mails'].str.contains("re :") | df_2['E-mails'].str.contains("fw :")]
-df_3_ok = df_3[df_3['E-mails'].str.contains("re :") | df_3['E-mails'].str.contains("fw :")]
-df_4_ok = df_4[df_4['E-mails'].str.contains("re :") | df_4['E-mails'].str.contains("fw :")]
-df_5_ok = df_5[df_5['E-mails'].str.contains("re :") | df_5['E-mails'].str.contains("fw :")]
-df_6_ok = df_6[df_6['E-mails'].str.contains("re :") | df_6['E-mails'].str.contains("fw :")]
-df_7_ok = df_7[df_7['E-mails'].str.contains("re :") | df_7['E-mails'].str.contains("fw :")]
-df_8_ok = df_8[df_8['E-mails'].str.contains("re :") | df_8['E-mails'].str.contains("fw :")]
-df_train_ok = df_train[df_train['E-mails'].str.contains("re :") | df_train['E-mails'].str.contains("fw :")]
-
-# Save the values for plotting
-for i in range(0,9):
-    locals()['y_{}'.format(i)] = np.array([len(locals()['df_{}_ok'.format(i)]), len(locals()['df_{}'.format(i)]) - len(locals()['df_{}_ok'.format(i)])])
-
-y=np.array([len(df_train_ok), len(df_train)-len(df_train_ok)])
-
-plt.pie(y, labels=["Replies or Forwards", "Neither"])
-plt.show()
+        ## This FUN manually implements the IDF (Inverse Document Frequency):
+def computeIDF(docList):
+    idfDict = {}
+    N = len(docList)
+    idfDict = dict.fromkeys(docList[0].keys(), 0)
+    for doc in docList:
+        for word, val in doc.items():
+            if val>0:
+                idfDict[word] = idfDict[word] + 1
+    for word, val in idfDict.items():
+        idfDict[word] = math.log10(N/float(val))
+    return idfDict
+        
+        ## This FUN computes the Coherence metric of our model:
+def getCoherence(m,t,d):
+    coherence_model_lda = CoherenceModel(model=m,texts=t, dictionary=d, coherence='c_v')
+    coherence_lda = coherence_model_lda.get_coherence()
+    return(coherence_lda) # Need high coherence
+    
+        ## This FUN produces the confusion matrix:
+ def classification_eval(y_true,y_pred):
+    
+    print("Confusion Matrix")
+    C = confusion_matrix(y_true,y_pred)
+    
+    print('Classification report')
+    print(classification_report(y_true, y_pred, target_names = ['Normal', 'Spam'], digits=3))
