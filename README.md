@@ -12,6 +12,20 @@ All report content is in the directory:
 
 Report/
 
+01 - Introduction
+
+02 - Research Summary
+
+03 - Alex TF-IDF
+
+04 - Matt LDA
+
+05 - Xiao NMF
+
+06 - Report
+
+07 - Conclusions
+
 The introduction should be read first followed by the research summary. This poses the problem we wish to tackle and expands upon our chosen data set. This should be followed by the individual reports in the appropriately numbered order. Finally, the report and conclusion give a summary of the results obtained and any conclusions that can be drawn from the data.
 
 # Requirements
